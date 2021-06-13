@@ -1,0 +1,8 @@
+datashark:
+# -------------------------------------------------------------------------[CLI]
+  cli:
+    host: 127.0.0.1
+    port: 13740
+    scheme: http
+    user: user
+    pswd: AAi2x973jaqFiyVj
