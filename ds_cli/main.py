@@ -4,8 +4,9 @@ import sys
 from json import dumps
 from argparse import ArgumentParser
 import requests
-from datashark_core import BANNER
-from datashark_core.config import CONFIG
+from ds_core import BANNER
+from ds_core.config import CONFIG
+from ds_core.logging import LOGGING_MANAGER
 from . import LOGGER
 
 
@@ -25,13 +26,14 @@ def info_cmd(args):
 
 def process_cmd(args):
     url = f'{args.base_url}/process'
-    data = {'url': args.url}
+    data = {'filepath': args.filepath}
     LOGGER.info("POST %s (%s)", url, data)
     print_resp(requests.post(url, auth=args.auth, data=data))
 
 
 def parse_args():
     parser = ArgumentParser(description="Datashark Command Line Interface")
+    parser.add_argument('--debug', '-d', action='store_true')
     parser.add_argument(
         '--host',
         default=CONFIG.get_('datashark', 'cli', 'host', default='127.0.0.1'),
@@ -58,7 +60,7 @@ def parse_args():
     info.set_defaults(func=info_cmd)
     process = cmd.add_parser('process')
     process.set_defaults(func=process_cmd)
-    process.add_argument('url')
+    process.add_argument('filepath')
     return parser.parse_args()
 
 
@@ -66,6 +68,7 @@ def app():
     """Application entry point"""
     LOGGER.info(BANNER)
     args = parse_args()
+    LOGGING_MANAGER.set_debug(args.debug)
     args.auth = requests.auth.HTTPBasicAuth(args.user, args.pswd)
     args.base_url = f'{args.scheme}://{args.host}:{args.port}'
     LOGGER.info("base url: %s", args.base_url)

@@ -6,4 +6,4 @@ line-length = 79
 skip-string-normalization = true
 
 [tool.setuptools_scm]
-write_to = "datashark_cli/__version__.py"
+write_to = "ds_cli/__version__.py"
