@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 from yarl import URL
 import requests
 from ds_core import BANNER
-from ds_core.config import DSConfiguration
+from ds_core.config import DSConfiguration, DEFAULT_CONFIG_PATH
 from ds_core.logging import LOGGING_MANAGER
 from . import LOGGER
 
@@ -37,8 +37,16 @@ def process_cmd(args):
 
 def parse_args():
     parser = ArgumentParser(description="Datashark Command Line Interface")
-    parser.add_argument('--debug', '-d', action='store_true', help="Enable debugging")
-    parser.add_argument('config', type=Path, help="Configuration file")
+    parser.add_argument(
+        '--debug', '-d', action='store_true', help="Enable debugging"
+    )
+    parser.add_argument(
+        '--config',
+        '-c',
+        type=Path,
+        default=DEFAULT_CONFIG_PATH,
+        help="Configuration file",
+    )
     cmd = parser.add_subparsers(dest='cmd')
     cmd.required = True
     info = cmd.add_parser('info')
