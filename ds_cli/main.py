@@ -23,15 +23,15 @@ def print_resp(resp):
 
 
 def info_cmd(args):
-    url = f'{args.base_url}/info'
-    LOGGER.info("GET %s", url)
+    url = args.base_url.with_path('/info')
+    LOGGER.info("GET %s", url.human_repr())
     return print_resp(requests.get(url, auth=args.auth))
 
 
 def process_cmd(args):
-    url = f'{args.base_url}/process'
+    url = args.base_url.with_path('/process')
     data = {'filepath': args.filepath}
-    LOGGER.info("POST %s (%s)", url, data)
+    LOGGER.info("POST %s (%s)", url.human_repr(), data)
     return print_resp(requests.post(url, auth=args.auth, data=data))
 
 
@@ -54,13 +54,13 @@ def parse_args():
 def run(args):
     LOGGING_MANAGER.set_debug(args.debug)
     args.auth = requests.auth.HTTPBasicAuth(
-        args.config.get('datashark', 'cli', 'username'),
-        args.config.get('datashark', 'cli', 'password'),
+        args.config.get('datashark.cli.username'),
+        args.config.get('datashark.cli.password'),
     )
     args.base_url = URL.build(
-        scheme=args.config.get('datashark', 'cli', 'scheme'),
-        host=args.config.get('datashark', 'cli', 'host'),
-        port=args.config.get('datashark', 'cli', 'port'),
+        scheme=args.config.get('datashark.cli.scheme'),
+        host=args.config.get('datashark.cli.host'),
+        port=args.config.get('datashark.cli.port'),
     )
     LOGGER.info("base url: %s", args.base_url.human_repr())
     return args.func(args)
