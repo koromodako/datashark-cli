@@ -32,7 +32,7 @@ def process_cmd(args):
     url = args.base_url.with_path('/process')
     data = {'filepath': args.filepath}
     LOGGER.info("POST %s (%s)", url.human_repr(), data)
-    return print_resp(requests.post(url, auth=args.auth, data=data))
+    return print_resp(requests.post(url, auth=args.auth, json=data))
 
 
 def parse_args():
@@ -62,13 +62,13 @@ def parse_args():
 def run(args):
     LOGGING_MANAGER.set_debug(args.debug)
     args.auth = requests.auth.HTTPBasicAuth(
-        args.config.get('datashark.cli.username'),
+        args.config.get('datashark.cli.username', default='user'),
         args.config.get('datashark.cli.password'),
     )
     args.base_url = URL.build(
-        scheme=args.config.get('datashark.cli.scheme'),
-        host=args.config.get('datashark.cli.host'),
-        port=args.config.get('datashark.cli.port'),
+        scheme=args.config.get('datashark.cli.scheme', default='http'),
+        host=args.config.get('datashark.cli.host', default='127.0.0.1'),
+        port=args.config.get('datashark.cli.port', default=13740),
     )
     LOGGER.info("base url: %s", args.base_url.human_repr())
     return args.func(args)
