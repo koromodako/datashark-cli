@@ -1,7 +1,8 @@
 datashark:
   cli: #-------------------------------------------------------------------[CLI]
-    host: 127.0.0.1
-    port: 13740
-    scheme: http
-    username: user
-    password: AAi2x973jaqFiyVj
+    ca: /opt/datashark/ssl/agent-ca-cert.pem
+    key: /opt/datashark/ssl/cli-key.pem
+    cert: /opt/datashark/ssl/cli-cert.pem
+    agents:
+      - https://localhost:13740
+
