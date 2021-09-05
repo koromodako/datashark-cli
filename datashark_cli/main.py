@@ -53,44 +53,22 @@ def parse_args():
             default=['http://localhost:13740'],
         )
     ]
-    args.ca = Path(
-        override_arg(
-            args.ca,
-            args.config,
-            'datashark.cli.ca',
-            input("Enter agents CA certificate path: "),
-        )
-    )
-    if not args.ca.is_file():
-        LOGGER.error("You must provide a valid agents CA certificate path!")
-        return None
-    args.key = Path(
-        override_arg(
-            args.key,
-            args.config,
-            'datashark.cli.key',
-            input("Enter CLI key path: "),
-        )
-    )
-    if not args.key.is_file():
-        LOGGER.error("You must provide a valid CLI private key path!")
-        return None
-    args.cert = Path(
-        override_arg(
-            args.cert,
-            args.config,
-            'datashark.cli.cert',
-            input("Enter CLI cert path: "),
-        )
-    )
-    if not args.cert.is_file():
-        LOGGER.error("You must provide a valid CLI certificate path!")
-        return None
+    args.ca = override_arg(args.ca, args.config, 'datashark.cli.ca')
+    if args.ca:
+        args.ca = Path(args.ca)
+    args.key = override_arg(args.key, args.config, 'datashark.cli.key')
+    if args.key:
+        args.key = Path(args.key)
+    args.cert = override_arg(args.cert, args.config, 'datashark.cli.cert')
+    if args.cert:
+        args.cert = Path(args.cert)
     return args
 
 
-async def start_session(args):
-    """Start a client session and run command handler"""
+def prepare_ssl_context(args):
+    """Prepare SSL context"""
+    if not args.ca or not args.key or not args.cert:
+        return None
     # prepare ssl context to authenticate server
     ssl_context = ssl.create_default_context(
         ssl.Purpose.SERVER_AUTH, cafile=str(args.ca)
@@ -104,9 +82,16 @@ async def start_session(args):
         keyfile=str(args.key),
         password=password,
     )
+    return ssl_context
+
+
+async def start_session(args):
+    """Start a client session and run command handler"""
+    ssl_context = prepare_ssl_context(args)
     # create TCP connector using custom ssl context
     connector = TCPConnector(ssl=ssl_context)
-    with ClientSession(connector=connector) as session:
+    client_session = ClientSession(connector=connector, raise_for_status=True)
+    async with client_session as session:
         await args.async_func(session, args)
 
 

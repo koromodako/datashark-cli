@@ -1,9 +1,9 @@
 """Process command
 """
-from datashark_core.model.api import ProcessorsRequest
+from datashark_core.model.api import ProcessingRequest, ProcessingResponse
 
 
-async def process_cmd(args):
+async def process_cmd(session, args):
     """Process command implementation"""
 
 

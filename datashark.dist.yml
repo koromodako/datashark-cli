@@ -1,7 +1,7 @@
 datashark:
   cli: #-------------------------------------------------------------------[CLI]
-    ca: /opt/datashark/ssl/agent-ca-cert.pem
-    key: /opt/datashark/ssl/cli-key.pem
-    cert: /opt/datashark/ssl/cli-cert.pem
+    ca: /opt/datashark/ssl/ca-chain.cert.pem
+    key: /opt/datashark/ssl/cli.key.pem
+    cert: /opt/datashark/ssl/cli.cert.pem
     agents:
       - https://localhost:13740
