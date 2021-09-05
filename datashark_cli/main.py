@@ -45,38 +45,44 @@ def parse_args():
     setup_commands(cmd)
     args = parser.parse_args()
     args.agents = [
-        URL(agent) for agent in
-        override_arg(
+        URL(agent)
+        for agent in override_arg(
             args.agents,
             args.config,
             'datashark.cli.agents',
-            default=['http://localhost:13740']
+            default=['http://localhost:13740'],
         )
     ]
-    args.ca = Path(override_arg(
-        args.ca,
-        args.config,
-        'datashark.cli.ca',
-        input("Enter agents CA certificate path: ")
-    ))
+    args.ca = Path(
+        override_arg(
+            args.ca,
+            args.config,
+            'datashark.cli.ca',
+            input("Enter agents CA certificate path: "),
+        )
+    )
     if not args.ca.is_file():
         LOGGER.error("You must provide a valid agents CA certificate path!")
         return None
-    args.key = Path(override_arg(
-        args.key,
-        args.config,
-        'datashark.cli.key',
-        input("Enter CLI key path: ")
-    ))
+    args.key = Path(
+        override_arg(
+            args.key,
+            args.config,
+            'datashark.cli.key',
+            input("Enter CLI key path: "),
+        )
+    )
     if not args.key.is_file():
         LOGGER.error("You must provide a valid CLI private key path!")
         return None
-    args.cert = Path(override_arg(
-        args.cert,
-        args.config,
-        'datashark.cli.cert',
-        input("Enter CLI cert path: ")
-    ))
+    args.cert = Path(
+        override_arg(
+            args.cert,
+            args.config,
+            'datashark.cli.cert',
+            input("Enter CLI cert path: "),
+        )
+    )
     if not args.cert.is_file():
         LOGGER.error("You must provide a valid CLI certificate path!")
         return None
