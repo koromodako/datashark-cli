@@ -5,4 +5,3 @@ datashark:
     cert: /opt/datashark/ssl/cli-cert.pem
     agents:
       - https://localhost:13740
-
