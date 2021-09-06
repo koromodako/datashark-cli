@@ -1,14 +1,84 @@
 """Process command
 """
+from secrets import choice
+from collections import defaultdict
 from datashark_core.model.api import ProcessingRequest, ProcessingResponse
+from .processors import enumerate_agents_processors
+from .. import LOGGER
+
+
+async def _build_maps(session, args):
+    """For each processor, create a list of agents providing this processor"""
+    processor_map = {}
+    processor_agents_map = defaultdict(list)
+    args.search = None
+    async for agent, processors in enumerate_agents_processors(session, args):
+        for processor in processors:
+            processor_map[processor.name] = processor
+            processor_agents_map[processor.name].append(agent)
+    return processor_map, processor_agents_map
 
 
 async def process_cmd(session, args):
     """Process command implementation"""
+    # retrieve processors and agents supporting these processors
+    # TODO: build a cache mechanism to prevent making requests everytime...
+    processor_map, processor_agents_map = await _build_maps(session, args)
+    # attempt to retrieve processor
+    processor = processor_map.get(args.processor)
+    if not processor:
+        LOGGER.error(
+            "cannot find an agent providing processor: %s", args.processor
+        )
+        return
+    # attempt to set processor arguments
+    for name, value in args.arguments:
+        proc_arg = processor.get_arg(name)
+        if not proc_arg:
+            LOGGER.error(
+                "processor %s does not support argument: %s",
+                processor.name,
+                name,
+            )
+            return
+        proc_arg.set_value(value)
+    # validate processor arguments
+    if not processor.validate_arguments():
+        print(processor.get_docstring())
+        return
+    # arguments are valid, now we need to find an agent supporting this
+    # processor and send a processing request to it
+    req = ProcessingRequest(filepath=args.filepath, processor=processor)
+    agent = choice(processor_agents_map[processor.name])
+    url = agent / 'process'
+    async with session.post(url, json=req.as_dict()) as a_resp:
+        resp = ProcessingResponse.build(await a_resp.json())
+        print('-' * 60)
+        print(agent)
+        print('-' * 60)
+        resp.display()
+
+def _processor_argument(value):
+    return tuple(value.split(':', 1))
 
 
 def setup(subparsers):
-    parser = subparsers.add_parser('process', help="")
-    parser.add_argument('filepath')
-    parser.add_argument('processor')
+    parser = subparsers.add_parser(
+        'process', help="Process a file using an agent-side processor"
+    )
+    parser.add_argument(
+        'processor', help="Name of the agent-side processor to run"
+    )
+    parser.add_argument(
+        'filepath',
+        help="Relative path to the file to process in agent known shared folder",
+    )
+    parser.add_argument(
+        '--arguments',
+        '-a',
+        nargs='+',
+        default=[],
+        type=_processor_argument,
+        help="Processor arguments",
+    )
     parser.set_defaults(async_func=process_cmd)
