@@ -48,7 +48,7 @@ async def process_cmd(session, args):
         return
     # arguments are valid, now we need to find an agent supporting this
     # processor and send a processing request to it
-    req = ProcessingRequest(filepath=args.filepath, processor=processor)
+    req = ProcessingRequest(processor=processor)
     agent = choice(processor_agents_map[processor.name])
     url = agent / 'process'
     async with session.post(url, json=req.as_dict()) as a_resp:
@@ -68,10 +68,6 @@ def setup(subparsers):
     )
     parser.add_argument(
         'processor', help="Name of the agent-side processor to run"
-    )
-    parser.add_argument(
-        'filepath',
-        help="Relative path to the file to process in agent known shared folder",
     )
     parser.add_argument(
         '--arguments',
