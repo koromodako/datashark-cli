@@ -2,6 +2,7 @@
 """
 from secrets import choice
 from collections import defaultdict
+from datashark_core.logging import cprint, COLORED
 from datashark_core.model.api import ProcessingRequest, ProcessingResponse
 from .processors import enumerate_agents_processors
 from .. import LOGGER
@@ -44,7 +45,7 @@ async def process_cmd(session, args):
         proc_arg.set_value(value)
     # validate processor arguments
     if not processor.validate_arguments():
-        print(processor.get_docstring())
+        cprint(processor.get_docstring(colored=COLORED))
         return
     # arguments are valid, now we need to find an agent supporting this
     # processor and send a processing request to it
@@ -53,9 +54,9 @@ async def process_cmd(session, args):
     url = agent / 'process'
     async with session.post(url, json=req.as_dict()) as a_resp:
         resp = ProcessingResponse.build(await a_resp.json())
-        print('-' * 60)
-        print(agent)
-        print('-' * 60)
+        cprint('-' * 60)
+        cprint(agent)
+        cprint('-' * 60)
         resp.display()
 
 def _processor_argument(value):
