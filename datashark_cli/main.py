@@ -30,7 +30,7 @@ def parse_args():
         '--agents',
         '-a',
         nargs='+',
-        help="Base URLs (scheme://host:port) of processing agents",
+        help="Processing agent's host:port pair",
     )
     parser.add_argument('--ca', help="Server CA certificate")
     parser.add_argument('--key', help="Client private key")
@@ -44,15 +44,12 @@ def parse_args():
     cmd.required = True
     setup_commands(cmd)
     args = parser.parse_args()
-    args.agents = [
-        URL(agent)
-        for agent in override_arg(
-            args.agents,
-            args.config,
-            'datashark.cli.agents',
-            default=['http://localhost:13740'],
-        )
-    ]
+    args.agents = override_arg(
+        args.agents,
+        args.config,
+        'datashark.cli.agents',
+        default=['localhost:13740'],
+    )
     args.ca = override_arg(args.ca, args.config, 'datashark.cli.ca')
     if args.ca:
         args.ca = Path(args.ca)
@@ -88,6 +85,9 @@ def prepare_ssl_context(args):
 async def start_session(args):
     """Start a client session and run command handler"""
     ssl_context = prepare_ssl_context(args)
+    # build agent URL list depending on ssl_context
+    scheme = 'https' if ssl_context else 'http'
+    args.agents = [URL(f'{scheme}://{agent}/') for agent in args.agents]
     # create TCP connector using custom ssl context
     connector = TCPConnector(ssl=ssl_context)
     client_session = ClientSession(connector=connector, raise_for_status=True)

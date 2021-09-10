@@ -1,7 +1,7 @@
 """Processors command
 """
 from aiohttp import ClientResponseError
-from datashark_core.logging import cprint, COLORED
+from datashark_core.logging import cprint, cwidth, COLORED
 from datashark_core.model.api import ProcessorsRequest, ProcessorsResponse
 from .. import LOGGER
 
@@ -22,12 +22,12 @@ async def enumerate_agents_processors(session, args):
 async def processors_cmd(session, args):
     """Processors command implementation"""
     async for agent, processors in enumerate_agents_processors(session, args):
-        cprint('=' * 60)
-        cprint(agent)
-        cprint('=' * 60)
+        cprint('=' * cwidth())
+        cprint(agent, highlight=True)
+        cprint('=' * cwidth())
         for processor in processors:
             cprint(processor.get_docstring())
-            cprint('-' * 60)
+            cprint('-' * cwidth())
 
 
 def setup(subparsers):

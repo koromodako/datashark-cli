@@ -1,6 +1,6 @@
 """Process command
 """
-from datashark_core.logging import cprint, COLORED
+from datashark_core.logging import cprint, cwidth
 from datashark_core.model.api import AgentInfoResponse
 
 
@@ -15,9 +15,9 @@ async def enumerate_agents_info(session, args):
 async def info_cmd(session, args):
     """Process command implementation"""
     async for agent, agent_info in enumerate_agents_info(session, args):
-        cprint('-' * 60)
+        cprint('=' * cwidth())
         cprint(agent)
-        cprint('-' * 60)
+        cprint('=' * cwidth())
         agent_info.display()
 
 

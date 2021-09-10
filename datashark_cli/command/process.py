@@ -2,7 +2,7 @@
 """
 from secrets import choice
 from collections import defaultdict
-from datashark_core.logging import cprint, COLORED
+from datashark_core.logging import cprint, cwidth, COLORED
 from datashark_core.model.api import ProcessingRequest, ProcessingResponse
 from .processors import enumerate_agents_processors
 from .. import LOGGER
@@ -23,7 +23,6 @@ async def _build_maps(session, args):
 async def process_cmd(session, args):
     """Process command implementation"""
     # retrieve processors and agents supporting these processors
-    # TODO: build a cache mechanism to prevent making requests everytime...
     processor_map, processor_agents_map = await _build_maps(session, args)
     # attempt to retrieve processor
     processor = processor_map.get(args.processor)
@@ -54,10 +53,11 @@ async def process_cmd(session, args):
     url = agent / 'process'
     async with session.post(url, json=req.as_dict()) as a_resp:
         resp = ProcessingResponse.build(await a_resp.json())
-        cprint('-' * 60)
+        cprint('=' * cwidth())
         cprint(agent)
-        cprint('-' * 60)
+        cprint('=' * cwidth())
         resp.display()
+
 
 def _processor_argument(value):
     return tuple(value.split(':', 1))
@@ -71,8 +71,8 @@ def setup(subparsers):
         'processor', help="Name of the agent-side processor to run"
     )
     parser.add_argument(
-        '--arguments',
-        '-a',
+        'arguments',
+        metavar='argument',
         nargs='+',
         default=[],
         type=_processor_argument,
