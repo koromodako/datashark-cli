@@ -14,6 +14,10 @@ from .command import setup as setup_commands
 from . import LOGGER
 
 
+def _agents_list(val):
+    return val.split(',')
+
+
 def parse_args():
     """Parse command line arguments"""
     parser = ArgumentParser(description="Datashark Command Line Interface")
@@ -29,8 +33,8 @@ def parse_args():
     parser.add_argument(
         '--agents',
         '-a',
-        nargs='+',
-        help="Processing agent's host:port pair",
+        type=_agents_list,
+        help="Comma separated list of agent's addresses e.g. host_0:port,host_1:port,...",
     )
     parser.add_argument('--ca', help="Server CA certificate")
     parser.add_argument('--key', help="Client private key")

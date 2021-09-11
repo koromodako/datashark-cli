@@ -12,7 +12,7 @@ async def enumerate_agents_info(session, args):
             yield agent, AgentInfoResponse.build(await a_resp.json())
 
 
-async def info_cmd(session, args):
+async def agents_cmd(session, args):
     """Process command implementation"""
     async for agent, agent_info in enumerate_agents_info(session, args):
         cprint('=' * cwidth())
@@ -22,5 +22,5 @@ async def info_cmd(session, args):
 
 
 def setup(subparsers):
-    parser = subparsers.add_parser('info', help="")
-    parser.set_defaults(async_func=info_cmd)
+    parser = subparsers.add_parser('agents', help="")
+    parser.set_defaults(async_func=agents_cmd)
