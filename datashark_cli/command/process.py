@@ -2,19 +2,19 @@
 """
 from secrets import choice
 from collections import defaultdict
-from datashark_core.logging import cprint, cwidth, COLORED
-from datashark_core.model.api import ProcessingRequest, ProcessingResponse
-from .processors import enumerate_agents_processors
+from datashark_core.logging import cprint
 from .. import LOGGER
 
 
-async def _build_maps(session, args):
+async def _build_mappings(session, args):
     """For each processor, create a list of agents providing this processor"""
     processor_map = {}
     processor_agents_map = defaultdict(list)
-    args.search = None
-    async for agent, processors in enumerate_agents_processors(session, args):
-        for processor in processors:
+    for agent in args.agents:
+        processors_resp = await agent.processors(session, None)
+        if not processors_resp:
+            continue
+        for processor in processors_resp.processors:
             processor_map[processor.name] = processor
             processor_agents_map[processor.name].append(agent)
     return processor_map, processor_agents_map
@@ -23,7 +23,7 @@ async def _build_maps(session, args):
 async def process_cmd(session, args):
     """Process command implementation"""
     # retrieve processors and agents supporting these processors
-    processor_map, processor_agents_map = await _build_maps(session, args)
+    processor_map, processor_agents_map = await _build_mappings(session, args)
     # attempt to retrieve processor
     processor = processor_map.get(args.processor)
     if not processor:
@@ -44,19 +44,16 @@ async def process_cmd(session, args):
         proc_arg.set_value(value)
     # validate processor arguments
     if not processor.validate_arguments():
-        cprint(processor.get_docstring(colored=COLORED))
+        cprint(processor.get_docstring())
         return
     # arguments are valid, now we need to find an agent supporting this
     # processor and send a processing request to it
-    req = ProcessingRequest(processor=processor)
     agent = choice(processor_agents_map[processor.name])
-    url = agent / 'process'
-    async with session.post(url, json=req.as_dict()) as a_resp:
-        resp = ProcessingResponse.build(await a_resp.json())
-        cprint('=' * cwidth())
-        cprint(agent)
-        cprint('=' * cwidth())
-        resp.display()
+    agent.display_banner()
+    processing_resp = await agent.process(session, processor)
+    if not processing_resp:
+        return
+    processing_resp.result.display()
 
 
 def _processor_argument(value):

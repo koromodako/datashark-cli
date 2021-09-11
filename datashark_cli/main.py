@@ -5,13 +5,13 @@ from asyncio import run
 from pathlib import Path
 from getpass import getpass
 from argparse import ArgumentParser
-from yarl import URL
 from aiohttp import TCPConnector, ClientSession
 from datashark_core import BANNER
 from datashark_core.config import DatasharkConfiguration, override_arg
 from datashark_core.logging import LOGGING_MANAGER
-from .command import setup as setup_commands
 from . import LOGGER
+from .command import setup as setup_commands
+from .agent_api import AgentAPI
 
 
 def _agents_list(val):
@@ -91,7 +91,7 @@ async def start_session(args):
     ssl_context = prepare_ssl_context(args)
     # build agent URL list depending on ssl_context
     scheme = 'https' if ssl_context else 'http'
-    args.agents = [URL(f'{scheme}://{agent}/') for agent in args.agents]
+    args.agents = [AgentAPI(f'{scheme}://{agent}/') for agent in args.agents]
     # create TCP connector using custom ssl context
     connector = TCPConnector(ssl=ssl_context)
     client_session = ClientSession(connector=connector, raise_for_status=True)
