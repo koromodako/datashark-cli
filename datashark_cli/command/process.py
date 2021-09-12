@@ -1,62 +1,98 @@
 """Process command
 """
-from secrets import choice
+from copy import deepcopy
+from typing import List, Dict, Tuple, Iterator
+from argparse import Namespace
+from itertools import cycle
 from collections import defaultdict
+from aiohttp import ClientSession
 from datashark_core.logging import cprint
+from datashark_core.model.api import Processor
 from .. import LOGGER
+from ..agent_api import AgentAPI
 
 
-async def _build_mappings(session, args):
+class InitiateProcessingError(Exception):
+    """Initiate processing error"""
+
+
+async def build_processors_mappings(
+    session: ClientSession, agents: List[AgentAPI]
+) -> Tuple[Dict[str, Processor], Dict[str, Iterator[AgentAPI]]]:
     """For each processor, create a list of agents providing this processor"""
-    processor_map = {}
-    processor_agents_map = defaultdict(list)
-    for agent in args.agents:
-        processors_resp = await agent.processors(session, None)
-        if not processors_resp:
+    proc_map = {}
+    proc_agents_map = defaultdict(list)
+    for agent in agents:
+        proc_resp = await agent.processors(session, None)
+        if not proc_resp:
             continue
-        for processor in processors_resp.processors:
-            processor_map[processor.name] = processor
-            processor_agents_map[processor.name].append(agent)
-    return processor_map, processor_agents_map
+        for processor in proc_resp.processors:
+            proc_map[processor.name] = processor
+            proc_agents_map[processor.name].append(agent)
+    # turn agents lists into cycles
+    proc_agents_map = {
+        name: cycle(agents) for name, agents in proc_agents_map.items()
+    }
+    # return maps
+    return proc_map, proc_agents_map
 
 
-async def process_cmd(session, args):
-    """Process command implementation"""
-    # retrieve processors and agents supporting these processors
-    processor_map, processor_agents_map = await _build_mappings(session, args)
+async def initiate_processing(
+    session: ClientSession,
+    proc_name: str,
+    proc_arguments: List[Tuple[str, str]],
+    proc_map: Dict[str, Processor],
+    proc_agents_map: Dict[str, Iterator[AgentAPI]],
+) -> bool:
+    """Perform processing"""
     # attempt to retrieve processor
-    processor = processor_map.get(args.processor)
+    processor = proc_map.get(proc_name)
     if not processor:
-        LOGGER.error(
-            "cannot find an agent providing processor: %s", args.processor
+        raise InitiateProcessingError(
+            f"cannot find an agent providing processor: {proc_name}"
         )
-        return
+    # perform a deepcopy of processor because set_value changes the instance
+    # and instance might be reused.
+    processor = deepcopy(processor)
     # attempt to set processor arguments
-    for name, value in args.arguments:
+    for name, value in proc_arguments:
         proc_arg = processor.get_arg(name)
         if not proc_arg:
-            LOGGER.error(
-                "processor %s does not support argument: %s",
-                processor.name,
-                name,
+            raise InitiateProcessingError(
+                f"processor {proc_name} does not support argument: {name}"
             )
-            return
         proc_arg.set_value(value)
     # validate processor arguments
     if not processor.validate_arguments():
-        cprint(processor.get_docstring())
-        return
+        raise InitiateProcessingError("arguments validation failed!")
     # arguments are valid, now we need to find an agent supporting this
     # processor and send a processing request to it
-    agent = choice(processor_agents_map[processor.name])
-    agent.display_banner()
+    agent = next(proc_agents_map[processor.name])
     processing_resp = await agent.process(session, processor)
     if not processing_resp:
-        return
+        return False
+    agent.display_banner()
     processing_resp.result.display()
+    return processing_resp.result.status
 
 
-def _processor_argument(value):
+async def process_cmd(session: ClientSession, args: Namespace):
+    """Process command implementation"""
+    # retrieve processors and agents supporting these processors
+    proc_map, proc_agents_map = await build_processors_mappings(
+        session, args.agents
+    )
+    # ask next available agent to perform processing
+    try:
+        if not await initiate_processing(
+            session, args.processor, args.arguments, proc_map, proc_agents_map
+        ):
+            LOGGER.warning("agent-side processing failed.")
+    except InitiateProcessingError as exc:
+        LOGGER.error("error while initiating processing: %s", exc)
+
+
+def _processor_argument(value: str):
     return tuple(value.split(':', 1))
 
 

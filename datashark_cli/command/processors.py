@@ -1,9 +1,11 @@
 """Processors command
 """
+from argparse import Namespace
+from aiohttp import ClientSession
 from datashark_core.logging import cprint, cwidth
 
 
-async def processors_cmd(session, args):
+async def processors_cmd(session: ClientSession, args: Namespace):
     """Processors command implementation"""
     for agent in args.agents:
         agent.display_banner()

@@ -1,8 +1,10 @@
 """Info command
 """
+from argparse import Namespace
+from aiohttp import ClientSession
 
 
-async def info_cmd(session, args):
+async def info_cmd(session: ClientSession, args: Namespace):
     """Info command implementation"""
     for agent in args.agents:
         agent.display_banner()

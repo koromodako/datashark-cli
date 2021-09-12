@@ -5,7 +5,7 @@ from asyncio import run
 from pathlib import Path
 from getpass import getpass
 from argparse import ArgumentParser
-from aiohttp import TCPConnector, ClientSession
+from aiohttp import TCPConnector, ClientSession, ClientTimeout
 from datashark_core import BANNER
 from datashark_core.config import DatasharkConfiguration, override_arg
 from datashark_core.logging import LOGGING_MANAGER
@@ -43,6 +43,18 @@ def parse_args():
         '--ask-pass',
         action='store_true',
         help="Ask for client private key password",
+    )
+    parser.add_argument(
+        '--limit',
+        type=int,
+        default=100,
+        help="Limit of simultaneous connections overall",
+    )
+    parser.add_argument(
+        '--limit-per-host',
+        type=int,
+        default=10,
+        help="Limit of simultaneous connections to the same endpoint, 0 means unlimited",
     )
     cmd = parser.add_subparsers(dest='cmd', help="Command to invoke")
     cmd.required = True
@@ -93,8 +105,17 @@ async def start_session(args):
     scheme = 'https' if ssl_context else 'http'
     args.agents = [AgentAPI(f'{scheme}://{agent}/') for agent in args.agents]
     # create TCP connector using custom ssl context
-    connector = TCPConnector(ssl=ssl_context)
-    client_session = ClientSession(connector=connector, raise_for_status=True)
+    connector = TCPConnector(
+        limit=args.limit,
+        ssl_context=ssl_context,
+        limit_per_host=args.limit_per_host,
+    )
+    client_timeout = ClientTimeout(
+        total=12*60*60, connect=60, sock_connect=None, sock_read=None
+    )
+    client_session = ClientSession(
+        timeout=client_timeout, connector=connector, raise_for_status=True
+    )
     async with client_session as session:
         await args.async_func(session, args)
 

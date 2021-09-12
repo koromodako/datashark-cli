@@ -1,0 +1,5 @@
+recipe_vars:
+  case: usbdrive
+  host: no_host
+  drive: usbdrive_0
+  raw_disk_img: usbdrive.img.gz

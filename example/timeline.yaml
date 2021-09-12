@@ -1,0 +1,37 @@
+recipe:
+
+  - name: build_plaso_timeline
+    processor: linux_log2timeline
+    arguments:
+      source: "{case}/{host}/{drive}/{raw_disk_img}"
+      storage_file: "{case}/timeline.plaso"
+
+  - name: build_csv_timeline
+    requires:
+      - build_plaso_timeline
+    processor: linux_psort
+    arguments:
+      output_file: "{case}/timeline.csv"
+      storage_file: "{case}/timeline.plaso"
+
+  - name: hash_raw_disk_image
+    processor: hasher
+    arguments:
+      filepath: "{case}/{host}/{drive}/{raw_disk_img}"
+      output_file: "{case}/{host}/{drive}/{raw_disk_img}.digests"
+
+  - name: hash_plaso_timeline
+    requires:
+      - build_plaso_timeline
+    processor: hasher
+    arguments:
+      filepath: "{case}/timeline.plaso"
+      output_file: "{case}/timeline.plaso.digests"
+
+  - name: hash_csv_timeline
+    requires:
+      - build_csv_timeline
+    processor: hasher
+    arguments:
+      filepath: "{case}/timeline.csv"
+      output_file: "{case}/timeline.csv.digests"
