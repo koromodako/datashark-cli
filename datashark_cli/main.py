@@ -111,7 +111,7 @@ async def start_session(args):
         limit_per_host=args.limit_per_host,
     )
     client_timeout = ClientTimeout(
-        total=12*60*60, connect=60, sock_connect=None, sock_read=None
+        total=12 * 60 * 60, connect=60, sock_connect=None, sock_read=None
     )
     client_session = ClientSession(
         timeout=client_timeout, connector=connector, raise_for_status=True

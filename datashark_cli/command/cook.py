@@ -27,12 +27,12 @@ async def worker(
     """Worker initiates processing"""
     while True:
         # get a task from the recipe api
-        LOGGER.info("%s waiting a new task.", name)
+        LOGGER.debug("%s waiting a new task.", name)
         task = await recipe_api.get_task()
-        LOGGER.warning("%s got task %s", name, task)
+        LOGGER.debug("%s processing task %s", name, task)
         if not task:
             # no more task in recipe, terminate worker
-            LOGGER.info("%s stopping now.", name)
+            LOGGER.debug("%s stopping.", name)
             return
         success = False
         try:
@@ -114,6 +114,11 @@ def setup(subparsers):
         "this agent will have to be able to process 'worker_count' requests "
         "in parallel.",
     )
-    parser.add_argument('--variables-file', '-v', type=Path, help="Variables file to apply for recipe")
+    parser.add_argument(
+        '--variables-file',
+        '-v',
+        type=Path,
+        help="Variables file to apply for recipe",
+    )
     parser.add_argument('recipe', type=Path, help="Path to recipe to cook")
     parser.set_defaults(async_func=cook_cmd)
