@@ -1,5 +1,5 @@
-# datashark-cli
+# Datashark Command Line Interface
 
-## Purpose
+This is datashark command line interface.
 
-This tool enables scripted interaction with datashark service.
+See [the documentation](https://koromodako.github.io/datashark/) to learn more about Datashark project.
