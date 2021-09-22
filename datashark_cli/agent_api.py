@@ -1,7 +1,11 @@
 """AgentAPI
 """
 from yarl import URL
-from aiohttp import ClientConnectorError, ClientResponseError
+from aiohttp import (
+    ClientResponseError,
+    ClientConnectorError,
+    ServerDisconnectedError,
+)
 from datashark_core.logging import cprint, cwidth
 from datashark_core.model.api import (
     ProcessorsRequest,
@@ -36,8 +40,13 @@ class AgentAPI:
         try:
             async with session.get(url) as a_resp:
                 resp_inst = resp_cls.build(await a_resp.json())
-        except ClientConnectorError:
+        except ClientConnectorError as exc:
             LOGGER.error("failed to connect to agent at %s", self._base_url)
+            LOGGER.error(exc)
+        except ServerDisconnectedError as exc:
+            LOGGER.error(
+                "server refused the connection, it might be expecting a certificate"
+            )
         except ClientResponseError as exc:
             LOGGER.warning(
                 "%s:%d: %s", self._base_url, exc.status, exc.message
@@ -50,8 +59,13 @@ class AgentAPI:
         try:
             async with session.post(url, json=req_inst.as_dict()) as a_resp:
                 resp_inst = resp_cls.build(await a_resp.json())
-        except ClientConnectorError:
+        except ClientConnectorError as exc:
             LOGGER.error("failed to connect to agent at %s", self._base_url)
+            LOGGER.error(exc)
+        except ServerDisconnectedError as exc:
+            LOGGER.error(
+                "server refused the connection, it might be expecting a certificate"
+            )
         except ClientResponseError as exc:
             LOGGER.warning(
                 "%s:%d: %s", self._base_url, exc.status, exc.message
