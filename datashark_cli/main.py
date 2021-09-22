@@ -9,6 +9,7 @@ from aiohttp import TCPConnector, ClientSession, ClientTimeout
 from datashark_core import BANNER
 from datashark_core.config import DatasharkConfiguration, override_arg
 from datashark_core.logging import LOGGING_MANAGER
+from datashark_core.filesystem import get_workdir
 from . import LOGGER
 from .command import setup as setup_commands
 from .agent_api import AgentAPI
@@ -128,4 +129,11 @@ def app():
         return
     LOGGING_MANAGER.set_debug(args.debug)
     LOGGER.debug("command line arguments: %s", args)
+    # check workdir
+    try:
+        LOGGER.info("working directory: %s", get_workdir(args.config))
+    except ValueError as exc:
+        LOGGER.critical(str(exc))
+        return
+    # run asynchronous function
     run(start_session(args))
