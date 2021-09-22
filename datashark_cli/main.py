@@ -5,6 +5,7 @@ from asyncio import run
 from pathlib import Path
 from getpass import getpass
 from argparse import ArgumentParser
+from functools import partial
 from aiohttp import TCPConnector, ClientSession, ClientTimeout
 from datashark_core import BANNER
 from datashark_core.config import DatasharkConfiguration, override_arg
@@ -40,11 +41,6 @@ def parse_args():
     parser.add_argument('--ca', help="Server CA certificate")
     parser.add_argument('--key', help="Client private key")
     parser.add_argument('--cert', help="Client certificate")
-    parser.add_argument(
-        '--ask-pass',
-        action='store_true',
-        help="Ask for client private key password",
-    )
     parser.add_argument(
         '--limit',
         type=int,
@@ -88,13 +84,10 @@ def prepare_ssl_context(args):
         ssl.Purpose.SERVER_AUTH, cafile=str(args.ca)
     )
     # prepare ssl context to send client certificate to server
-    password = None
-    if args.ask_pass:
-        password = getpass("Enter client private key password: ")
     ssl_context.load_cert_chain(
         certfile=str(args.cert),
         keyfile=str(args.key),
-        password=password,
+        password=partial(getpass, "Enter private key password: "),
     )
     return ssl_context
 
