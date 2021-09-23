@@ -19,5 +19,7 @@ async def find_cmd(_session: ClientSession, args: Namespace):
 def setup(subparsers):
     """Setup find command"""
     parser = subparsers.add_parser('find', help="")
-    parser.add_argument('pattern', type=re.compile, help="Python re compatible pattern")
+    parser.add_argument(
+        'pattern', type=re.compile, help="Python re compatible pattern"
+    )
     parser.set_defaults(async_func=find_cmd)

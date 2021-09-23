@@ -14,6 +14,7 @@ SETUP_FUNC = [
     setup_processors,
 ]
 
+
 def setup(subparsers):
     """Setup commands"""
     for setup_func in SETUP_FUNC:

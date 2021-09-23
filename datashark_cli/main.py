@@ -79,6 +79,7 @@ def prepare_ssl_context(args):
     """Prepare SSL context"""
     if not args.ca or not args.key or not args.cert:
         return None
+    LOGGER.info("preparing SSL context...")
     # prepare ssl context to authenticate server
     ssl_context = ssl.create_default_context(
         ssl.Purpose.SERVER_AUTH, cafile=str(args.ca)
