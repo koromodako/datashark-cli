@@ -68,7 +68,7 @@ class AgentAPI:
             )
         except ClientResponseError as exc:
             LOGGER.warning(
-                "%s:%d: %s", self._base_url, exc.status, exc.message
+                "%s answered %d %s", self._base_url, exc.status, exc.message
             )
         return resp_inst
 
