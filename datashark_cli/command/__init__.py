@@ -1,5 +1,6 @@
 """Datashark CLI commands
 """
+from .aliases import setup as setup_aliases
 from .cook import setup as setup_cook
 from .find import setup as setup_find
 from .info import setup as setup_info
@@ -7,6 +8,7 @@ from .process import setup as setup_process
 from .processors import setup as setup_processors
 
 SETUP_FUNC = [
+    setup_aliases,
     setup_cook,
     setup_find,
     setup_info,

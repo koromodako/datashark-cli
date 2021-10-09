@@ -16,5 +16,7 @@ async def info_cmd(session: ClientSession, args: Namespace):
 
 def setup(subparsers):
     """Setup info command"""
-    parser = subparsers.add_parser('info', help="")
+    parser = subparsers.add_parser(
+        'info', help="Get information about available agents"
+    )
     parser.set_defaults(async_func=info_cmd)
